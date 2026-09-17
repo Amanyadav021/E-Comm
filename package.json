@@ -1,0 +1,26 @@
+{
+  "name": "shopcraft",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Production-ready e-commerce platform (customer storefront + admin dashboard)",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build:shared": "npm run build -w @shopcraft/shared",
+    "build": "npm run build:shared && npm run build -w @shopcraft/api && npm run build -w @shopcraft/web && npm run build -w @shopcraft/admin",
+    "dev:api": "npm run dev -w @shopcraft/api",
+    "dev:web": "npm run dev -w @shopcraft/web",
+    "dev:admin": "npm run dev -w @shopcraft/admin",
+    "db:generate": "npm run db:generate -w @shopcraft/api",
+    "db:migrate": "npm run db:migrate -w @shopcraft/api",
+    "db:deploy": "npm run db:deploy -w @shopcraft/api",
+    "db:seed": "npm run db:seed -w @shopcraft/api",
+    "test": "npm run test -w @shopcraft/api",
+    "lint": "npm run lint --workspaces --if-present"
+  }
+}
