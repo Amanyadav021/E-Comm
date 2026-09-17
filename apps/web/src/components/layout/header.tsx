@@ -210,6 +210,7 @@ export function Header() {
   });
 
   return (
+    <>
     <header className="sticky top-0 z-40 border-b border-zinc-200/80 bg-white/90 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/90">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4 md:h-16 md:gap-6">
         {/* Mobile menu */}
@@ -307,7 +308,10 @@ export function Header() {
         </div>
       </nav>
 
-      {/* Mobile drawer */}
+    </header>
+
+      {/* Mobile drawer — a SIBLING of the header: the header's backdrop-blur
+          creates a containing block that would trap and clip fixed children */}
       {menuOpen && (
         <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true">
           <div className="absolute inset-0 bg-zinc-900/50" onClick={() => setMenuOpen(false)} />
@@ -364,6 +368,6 @@ export function Header() {
           </div>
         </div>
       )}
-    </header>
+    </>
   );
 }
