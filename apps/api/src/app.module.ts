@@ -57,6 +57,7 @@ import { SettingsAdminController } from './admin/settings-admin.controller';
 
 // Misc
 import { UploadsController } from './uploads/uploads.controller';
+import { STORAGE_PROVIDER, storageProviderFactory } from './uploads/storage.provider';
 import { TasksService } from './tasks/tasks.service';
 
 /**
@@ -115,6 +116,7 @@ import { TasksService } from './tasks/tasks.service';
     { provide: OTP_SENDER, useFactory: otpSenderFactory },
     { provide: EMAIL_SENDER, useFactory: emailSenderFactory },
     { provide: PAYMENT_GATEWAY, useFactory: paymentGatewayFactory },
+    { provide: STORAGE_PROVIDER, useFactory: storageProviderFactory },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: PermissionsGuard },

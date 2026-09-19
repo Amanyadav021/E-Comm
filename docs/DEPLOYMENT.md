@@ -79,9 +79,42 @@ context = repository root, then set:
 
 Then point the Razorpay webhook at `https://<api-host>/api/payments/webhook`.
 
-> `STORAGE_PROVIDER=s3` currently raises a clear error until you run
-> `npm i @aws-sdk/client-s3 -w @shopcraft/api` and implement the S3 branch in
-> `uploads.controller.ts`. Until then uploaded images vanish on redeploy.
+### Product images
+
+Leave `STORAGE_PROVIDER=local` and every image uploaded through the admin is
+gone on the next deploy — container disks are ephemeral. Use Supabase Storage:
+
+1. Supabase dashboard → **Storage** → create a bucket named `product-images`,
+   marked **Public**.
+2. **Storage → S3 Access Keys** → create a key pair.
+3. Set these on the API host:
+
+```
+STORAGE_PROVIDER=s3
+S3_ENDPOINT=https://<project-ref>.supabase.co/storage/v1/s3
+S3_REGION=<project region>
+S3_BUCKET=product-images
+S3_ACCESS_KEY_ID=<from step 2>
+S3_SECRET_ACCESS_KEY=<from step 2>
+S3_PUBLIC_BASE_URL=https://<project-ref>.supabase.co/storage/v1/object/public/product-images
+```
+
+The same variables point at Cloudflare R2, AWS S3 or MinIO — only the endpoint
+and keys change; no code does.
+
+> **Connecting to Supabase from a network without IPv6:** the "Direct
+> connection" string in the Supabase dashboard resolves to an IPv6-only host.
+> If your network is IPv4-only the API simply cannot reach it (Prisma reports
+> `P1001`). Use the **Session pooler** string instead — same database, IPv4,
+> and unlike the transaction pooler it supports the interactive transactions
+> that checkout relies on:
+>
+> ```
+> postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres
+> ```
+>
+> A password containing `@`, `/` or `:` **must be percent-encoded** or the URL
+> parses wrong (`@` → `%40`).
 
 ## 4. Deploy the frontends to Vercel
 
