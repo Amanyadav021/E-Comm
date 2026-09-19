@@ -111,6 +111,11 @@ cp .env.example .env   # fill in MSSQL_SA_PASSWORD, JWT secrets, gateway keys…
 docker compose up -d --build
 ```
 
+**Deploying for real (GitHub + Vercel + a managed database): see
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).** Short version — the two Next.js apps
+go on Vercel, but the API cannot (it has cron jobs, disk uploads and a
+persistent server), so it needs an always-on host such as Railway/Render/Fly.
+
 Per-app Dockerfiles live in `apps/*/Dockerfile` (build from the repo root).
 For a managed setup, host the API anywhere Node runs, the two Next.js apps on
 any Node/edge host, and point `NEXT_PUBLIC_API_URL` at the API origin. Keep the
