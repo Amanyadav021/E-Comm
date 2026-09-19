@@ -78,7 +78,7 @@ export class OrdersAdminService {
       include: {
         user: { select: { id: true, name: true, email: true, phone: true, createdAt: true } },
         items: true,
-        statusHistory: { orderBy: { createdAt: 'asc' }, include: { actor: { select: { name: true } } } },
+        statusHistory: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], include: { actor: { select: { name: true } } } },
         payments: { orderBy: { createdAt: 'desc' } },
         refunds: { orderBy: { createdAt: 'desc' } },
         returnRequests: { include: { items: { include: { orderItem: true } } }, orderBy: { createdAt: 'desc' } },

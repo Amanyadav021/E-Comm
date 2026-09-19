@@ -230,7 +230,10 @@ export class CatalogService {
         brand: true,
         category: { include: { parent: true } },
         images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
-        variants: { where: { isActive: true, deletedAt: null }, orderBy: { createdAt: 'asc' } },
+        // Variants of one product share a createdAt (single nested write), and a
+        // tie in ORDER BY is non-deterministic in Postgres — id breaks it so the
+        // option list and default selection stay stable across page loads.
+        variants: { where: { isActive: true, deletedAt: null }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
       },
     });
     if (!p) throw new NotFoundException('Product not found');

@@ -84,7 +84,7 @@ export class CatalogAdminService {
       where: { id, deletedAt: null },
       include: {
         images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
-        variants: { where: { deletedAt: null }, orderBy: { createdAt: 'asc' } },
+        variants: { where: { deletedAt: null }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
       },
     });
     if (!p) throw new NotFoundException('Product not found');

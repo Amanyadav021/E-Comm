@@ -64,7 +64,7 @@ export class OrdersService {
       where: { userId, OR: [{ id: idOrNumber }, { orderNumber: idOrNumber }] },
       include: {
         items: { include: { reviews: { where: { userId } } } },
-        statusHistory: { orderBy: { createdAt: 'asc' } },
+        statusHistory: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
         payments: { orderBy: { createdAt: 'desc' } },
         refunds: { orderBy: { createdAt: 'desc' } },
         returnRequests: { include: { items: true }, orderBy: { createdAt: 'desc' } },
