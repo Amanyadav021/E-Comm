@@ -23,7 +23,8 @@ A complete e-commerce platform for a single merchant (architected so multi-vendo
 ## 1. Prerequisites
 
 - Node.js ≥ 20 and npm ≥ 10
-- A SQL Server instance (dev on this machine uses the local SQL Server with Windows integrated auth; Docker/production uses the `mcr.microsoft.com/mssql/server` image). PostgreSQL migration notes are in `docs/ARCHITECTURE.md`.
+- PostgreSQL 14+ — either local, via Docker (`docker compose up -d db`), or a free
+  hosted database such as [Neon](https://neon.tech) or [Supabase](https://supabase.com).
 
 ## 2. Install & set up
 
@@ -34,13 +35,14 @@ npm install
 Create `apps/api/.env` (copy from `.env.example` at the repo root and adjust):
 
 ```
-DATABASE_URL=sqlserver://localhost:1433;database=ecommerce_dev;integratedSecurity=true;trustServerCertificate=true
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/ecommerce_dev?schema=public
 ```
 
-Create the database once (SQL auth users can skip `-E` and pass `-U/-P`):
+A hosted Neon/Supabase database needs no extra setup — paste its connection
+string above. For a local Postgres, create the database once:
 
 ```bash
-sqlcmd -S localhost -E -Q "IF DB_ID('ecommerce_dev') IS NULL CREATE DATABASE ecommerce_dev;"
+createdb ecommerce_dev
 ```
 
 Then migrate + seed:
@@ -107,7 +109,7 @@ An order is **never** marked paid from frontend input. The flow is:
 
 ```bash
 # with Docker (SQL Server + api + web + admin)
-cp .env.example .env   # fill in MSSQL_SA_PASSWORD, JWT secrets, gateway keys…
+cp .env.example .env   # fill in POSTGRES_PASSWORD, JWT secrets, gateway keys…
 docker compose up -d --build
 ```
 

@@ -19,7 +19,7 @@ export function validate<S extends ZodTypeAny>(schema: S, data: unknown): output
   return result.data;
 }
 
-/** JSON stored in NVarChar columns — tolerant parse. */
+/** JSON stored in text columns — tolerant parse. */
 export function fromJson<T>(value: string | null | undefined, fallback: T): T {
   if (!value) return fallback;
   try {

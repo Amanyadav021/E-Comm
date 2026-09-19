@@ -41,26 +41,24 @@ No secrets are committed (only `.env.example` placeholders), but keep it private
 
 ## 2. Database
 
-The dev database is a **local SQL Server instance with Windows integrated auth**,
-which is not reachable from the internet. Production needs a managed database.
-Two options:
+The app runs on **PostgreSQL**. Any managed Postgres works; [Neon](https://neon.tech)
+and [Supabase](https://supabase.com) both have a free tier that is plenty for
+launch. Create a database, copy its connection string, and set:
 
-**Option A — stay on SQL Server (zero schema work)**
-Provision Azure SQL Database, then:
 ```
-DATABASE_URL=sqlserver://<server>.database.windows.net:1433;database=shopcraft;user=<u>;password=<p>;encrypt=true
+DATABASE_URL=postgresql://USER:PASS@HOST/DB?sslmode=require
 ```
-Existing migrations in `apps/api/prisma/migrations` apply as-is.
 
-**Option B — switch to Postgres (cheaper/simpler hosting: Neon, Supabase)**
-The schema was written to be portable (see `docs/ARCHITECTURE.md`), but this is
-not a config flip — it needs `provider = "postgresql"`, regenerated migrations,
-and the filtered-unique-index workaround reverted to plain `@unique`.
+Then apply the schema and (optionally) the demo catalog:
 
-Either way, run migrations once against the new database:
 ```bash
-cd apps/api && npx prisma migrate deploy && npm run db:seed   # seed is optional
+cd apps/api
+npx prisma migrate deploy     # creates all 42 tables
+npm run db:seed               # roles + admin user + demo data — optional
 ```
+
+`db:seed` is what creates your first Super Admin, so either run it or create
+that account another way before you try to sign in to the dashboard.
 
 ## 3. Deploy the API
 

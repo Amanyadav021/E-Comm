@@ -25,7 +25,7 @@ export class CheckoutService {
    */
   async createOrder(userId: string, dto: CheckoutInput) {
     // Idempotency: same key returns the same order instead of creating a duplicate
-    const existing = await this.prisma.order.findFirst({
+    const existing = await this.prisma.order.findUnique({
       where: { idempotencyKey: dto.idempotencyKey },
       include: { payments: { orderBy: { createdAt: 'desc' }, take: 1 } },
     });

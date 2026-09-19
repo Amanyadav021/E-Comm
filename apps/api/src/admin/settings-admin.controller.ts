@@ -88,7 +88,7 @@ export class SettingsAdminController {
   async createStaff(@CurrentUser() admin: AuthUser, @Body() body: unknown) {
     const dto = validate(staffCreateSchema, body);
     this.assertValidRoles(dto.roles);
-    const exists = await this.prisma.user.findFirst({ where: { email: dto.email } });
+    const exists = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (exists) throw new BadRequestException('A user with this email already exists.');
     const user = await this.prisma.user.create({
       data: {

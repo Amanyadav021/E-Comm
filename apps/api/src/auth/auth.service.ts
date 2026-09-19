@@ -45,7 +45,7 @@ export class AuthService {
   // ---------------- Registration & password login ----------------
 
   async register(input: { name: string; email: string; password: string }, meta: RequestMeta) {
-    const existing = await this.prisma.user.findFirst({ where: { email: input.email } });
+    const existing = await this.prisma.user.findUnique({ where: { email: input.email } });
     if (existing) throw new ConflictException('An account with this email already exists. Try signing in.');
 
     const passwordHash = await bcrypt.hash(input.password, 12);
@@ -68,7 +68,7 @@ export class AuthService {
   }
 
   async login(input: { email: string; password: string }, meta: RequestMeta) {
-    const user = await this.prisma.user.findFirst({ where: { email: input.email } });
+    const user = await this.prisma.user.findUnique({ where: { email: input.email } });
     if (!user?.passwordHash) throw new UnauthorizedException('Incorrect email or password.');
     const ok = await bcrypt.compare(input.password, user.passwordHash);
     if (!ok) throw new UnauthorizedException('Incorrect email or password.');
@@ -94,10 +94,10 @@ export class AuthService {
       throw new UnauthorizedException('Google account did not provide the required information.');
     }
 
-    let user = await this.prisma.user.findFirst({ where: { googleId: payload.sub } });
+    let user = await this.prisma.user.findUnique({ where: { googleId: payload.sub } });
     if (!user) {
       // Link to an existing email account, or create a new one
-      const byEmail = await this.prisma.user.findFirst({ where: { email: payload.email } });
+      const byEmail = await this.prisma.user.findUnique({ where: { email: payload.email } });
       if (byEmail) {
         user = await this.prisma.user.update({
           where: { id: byEmail.id },
@@ -171,7 +171,7 @@ export class AuthService {
     }
     await this.prisma.otpCode.update({ where: { id: otp.id }, data: { consumedAt: new Date() } });
 
-    let user = await this.prisma.user.findFirst({ where: { phone: input.phone } });
+    let user = await this.prisma.user.findUnique({ where: { phone: input.phone } });
     if (!user) {
       user = await this.prisma.user.create({
         data: {

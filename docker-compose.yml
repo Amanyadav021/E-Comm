@@ -1,18 +1,20 @@
 # ShopCraft — production-style stack.
-#   1. Copy .env.example values into a .env file next to this compose file.
+#   1. Copy .env.example to .env and fill in the secrets.
 #   2. docker compose up -d --build
-# The database uses SQL Server (matching the dev schema). Data persists in a named volume.
+# Data persists in the named volumes below.
 services:
   db:
-    image: mcr.microsoft.com/mssql/server:2019-latest
+    image: postgres:16-alpine
     environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?set MSSQL_SA_PASSWORD in .env}
+      POSTGRES_USER: ${POSTGRES_USER:-shopcraft}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-shopcraft}
     volumes:
-      - mssql-data:/var/opt/mssql
+      - pg-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' || exit 1"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-shopcraft} -d ${POSTGRES_DB:-shopcraft}"]
+      interval: 5s
+      timeout: 5s
       retries: 10
 
   api:
@@ -25,7 +27,7 @@ services:
     environment:
       NODE_ENV: production
       API_PORT: 4000
-      DATABASE_URL: "sqlserver://db:1433;database=ecommerce;user=sa;password=${MSSQL_SA_PASSWORD};encrypt=true;trustServerCertificate=true"
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-shopcraft}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-shopcraft}?schema=public"
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3100}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?set JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?set JWT_REFRESH_SECRET}
@@ -66,5 +68,5 @@ services:
       - "3100:3100"
 
 volumes:
-  mssql-data:
+  pg-data:
   uploads:

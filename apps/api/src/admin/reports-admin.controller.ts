@@ -104,10 +104,10 @@ export class ReportsAdminController {
 
     const [revenueByDay, statusGroups, methodGroups, topProducts, customersByDay] = await Promise.all([
       this.prisma.$queryRaw<Array<{ d: Date; revenue: number; orders: number }>>`
-        SELECT CAST(placedAt AS date) AS d, SUM(total) AS revenue, COUNT(*) AS orders
-        FROM [Order]
-        WHERE placedAt >= ${from} AND placedAt <= ${to} AND status IN (${statusList})
-        GROUP BY CAST(placedAt AS date)
+        SELECT CAST(o."placedAt" AS date) AS d, SUM(o."total") AS revenue, COUNT(*) AS orders
+        FROM "Order" o
+        WHERE o."placedAt" >= ${from} AND o."placedAt" <= ${to} AND o."status" IN (${statusList})
+        GROUP BY CAST(o."placedAt" AS date)
         ORDER BY d`,
       this.prisma.order.groupBy({
         by: ['status'],
@@ -121,17 +121,18 @@ export class ReportsAdminController {
         _sum: { total: true },
       }),
       this.prisma.$queryRaw<Array<{ productId: string; name: string; qty: number; revenue: number }>>`
-        SELECT TOP 10 oi.productId, oi.nameSnapshot AS name, SUM(oi.qty) AS qty, SUM(oi.lineTotal) AS revenue
-        FROM OrderItem oi
-        INNER JOIN [Order] o ON o.id = oi.orderId
-        WHERE o.placedAt >= ${from} AND o.placedAt <= ${to} AND o.status IN (${statusList})
-        GROUP BY oi.productId, oi.nameSnapshot
-        ORDER BY revenue DESC`,
+        SELECT oi."productId", oi."nameSnapshot" AS name, SUM(oi."qty") AS qty, SUM(oi."lineTotal") AS revenue
+        FROM "OrderItem" oi
+        INNER JOIN "Order" o ON o."id" = oi."orderId"
+        WHERE o."placedAt" >= ${from} AND o."placedAt" <= ${to} AND o."status" IN (${statusList})
+        GROUP BY oi."productId", oi."nameSnapshot"
+        ORDER BY revenue DESC
+        LIMIT 10`,
       this.prisma.$queryRaw<Array<{ d: Date; customers: number }>>`
-        SELECT CAST(u.createdAt AS date) AS d, COUNT(*) AS customers
-        FROM [User] u
-        WHERE u.createdAt >= ${from} AND u.createdAt <= ${to} AND u.deletedAt IS NULL
-        GROUP BY CAST(u.createdAt AS date)
+        SELECT CAST(u."createdAt" AS date) AS d, COUNT(*) AS customers
+        FROM "User" u
+        WHERE u."createdAt" >= ${from} AND u."createdAt" <= ${to} AND u."deletedAt" IS NULL
+        GROUP BY CAST(u."createdAt" AS date)
         ORDER BY d`,
     ]);
 
@@ -191,10 +192,11 @@ export class ReportsAdminController {
     const statusList = Prisma.join(COUNTED);
     const [best, mostViewed, mostWishlisted] = await Promise.all([
       this.prisma.$queryRaw<Array<{ productId: string; name: string; qty: number; revenue: number }>>`
-        SELECT TOP 20 oi.productId, oi.nameSnapshot AS name, SUM(oi.qty) AS qty, SUM(oi.lineTotal) AS revenue
-        FROM OrderItem oi INNER JOIN [Order] o ON o.id = oi.orderId
-        WHERE o.placedAt >= ${from} AND o.placedAt <= ${to} AND o.status IN (${statusList})
-        GROUP BY oi.productId, oi.nameSnapshot ORDER BY qty DESC`,
+        SELECT oi."productId", oi."nameSnapshot" AS name, SUM(oi."qty") AS qty, SUM(oi."lineTotal") AS revenue
+        FROM "OrderItem" oi INNER JOIN "Order" o ON o."id" = oi."orderId"
+        WHERE o."placedAt" >= ${from} AND o."placedAt" <= ${to} AND o."status" IN (${statusList})
+        GROUP BY oi."productId", oi."nameSnapshot" ORDER BY qty DESC
+        LIMIT 20`,
       this.prisma.product.findMany({
         where: { deletedAt: null },
         orderBy: { viewCount: 'desc' },
@@ -225,18 +227,19 @@ export class ReportsAdminController {
     const statusList = Prisma.join(COUNTED);
     const [topSpenders, returning] = await Promise.all([
       this.prisma.$queryRaw<Array<{ userId: string; name: string; orders: number; spent: number }>>`
-        SELECT TOP 20 o.userId, u.name, COUNT(*) AS orders, SUM(o.total) AS spent
-        FROM [Order] o INNER JOIN [User] u ON u.id = o.userId
-        WHERE o.placedAt >= ${from} AND o.placedAt <= ${to} AND o.status IN (${statusList})
-        GROUP BY o.userId, u.name ORDER BY spent DESC`,
+        SELECT o."userId", u."name", COUNT(*) AS orders, SUM(o."total") AS spent
+        FROM "Order" o INNER JOIN "User" u ON u."id" = o."userId"
+        WHERE o."placedAt" >= ${from} AND o."placedAt" <= ${to} AND o."status" IN (${statusList})
+        GROUP BY o."userId", u."name" ORDER BY spent DESC
+        LIMIT 20`,
       this.prisma.$queryRaw<Array<{ repeatCustomers: number; totalCustomers: number }>>`
         SELECT
-          SUM(CASE WHEN cnt > 1 THEN 1 ELSE 0 END) AS repeatCustomers,
-          COUNT(*) AS totalCustomers
+          SUM(CASE WHEN cnt > 1 THEN 1 ELSE 0 END) AS "repeatCustomers",
+          COUNT(*) AS "totalCustomers"
         FROM (
-          SELECT userId, COUNT(*) AS cnt FROM [Order]
-          WHERE placedAt >= ${from} AND placedAt <= ${to} AND status IN (${statusList})
-          GROUP BY userId
+          SELECT "userId", COUNT(*) AS cnt FROM "Order"
+          WHERE "placedAt" >= ${from} AND "placedAt" <= ${to} AND "status" IN (${statusList})
+          GROUP BY "userId"
         ) t`,
     ]);
     return {

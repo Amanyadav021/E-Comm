@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | API | NestJS 11 (modular monolith) | strong structure/DI, one deployable, domain folders keep boundaries clean |
 | ORM | Prisma 6 | typed queries, migrations, interactive transactions |
-| Database | **SQL Server** (dev: local instance w/ integrated auth; prod: container or managed) | the spec allows "PostgreSQL or SQL Server"; SQL Server was already installed & running on the dev machine, giving a real RDBMS with zero setup. Schema is kept portable — see below |
+| Database | **PostgreSQL 16** | started on SQL Server (it was already running on the dev machine), migrated to Postgres for cheap managed hosting — Neon/Supabase have free tiers, hosted SQL Server does not |
 | Storefront/Admin | Next.js 15 + Tailwind v4 | SSR/SEO for the storefront, fast DX, shared design tokens |
 | Shared domain | `@shopcraft/shared` TS package | ONE source of truth for statuses, state machines, pricing math, zod schemas, permissions — used by API and both frontends |
 | Auth | JWT access (15 min) + rotating refresh tokens (hashed in DB), httpOnly cookies | Bearer header also accepted for API clients |
@@ -14,20 +14,30 @@
 | Notifications | Hub service → in-app + email senders | SMS/push/WhatsApp plug in at one point |
 | Storage | Provider interface → local disk (dev) / S3-compatible | DB stores URLs only |
 
-## SQL Server portability notes (→ PostgreSQL later)
+## Database notes
 
-- **No Prisma enums** on SQL Server → all status/type columns are strings; the
-  canonical unions + state machines live in `@shopcraft/shared` and are enforced
-  in services. On Postgres you may convert them to native enums.
-- **Unique + NULL**: SQL Server unique constraints allow a single NULL, so the
-  nullable unique columns (`User.email/phone/googleId`, `Payment.providerPaymentId`,
-  `Order.idempotencyKey`) are enforced by **filtered unique indexes**
-  (`WHERE col IS NOT NULL`) created in migration `20260917170428`. Postgres
-  handles NULLs natively; restore plain `@unique` there.
-- **Referential actions**: all relations use `NoAction` (SQL Server rejects
-  multiple cascade paths). Deletion is soft (`deletedAt`) everywhere it matters.
-- JSON payloads are `NVarChar(max)` strings ((de)serialized in `common/utils.ts`);
-  on Postgres switch to `Json` columns if desired.
+- **No native enums.** Status/type columns are plain strings; the canonical
+  unions and state machines live in `@shopcraft/shared` and are enforced in the
+  services. This lets a new status ship without a schema migration.
+- **Referential actions are `NoAction`** — inherited from the SQL Server origin
+  (it rejects multiple cascade paths) and kept deliberately: deletion is soft
+  (`deletedAt`) everywhere it matters, so cascades would be wrong anyway.
+- **JSON payloads are `@db.Text`**, (de)serialized in `common/utils.ts`. They
+  could become `Json` columns now that the target is Postgres; they are left as
+  text because nothing queries inside them.
+- **Raw SQL quotes every identifier** (`UPDATE "ProductVariant" SET "stockOnHand" …`).
+  Postgres folds unquoted identifiers to lowercase, so the camelCase table and
+  column names Prisma creates *must* stay quoted. Same for output aliases that
+  the TypeScript reads back by name.
+
+### Migrating from the original SQL Server schema
+
+The SQL Server migrations are in git history before the Postgres switch. The
+changes required were: the datasource provider, `NVarChar(Max)` → `Text`,
+dropping the filtered-unique-index workaround (SQL Server permits only one NULL
+per unique constraint, so nullable uniques like `User.email` needed
+`WHERE col IS NOT NULL` indexes — Postgres allows many NULLs natively), and
+rewriting `[bracket]`/`TOP n` raw SQL as quoted identifiers with `LIMIT`.
 
 ## Money flow (server-authoritative)
 

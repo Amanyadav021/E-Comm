@@ -12,7 +12,7 @@ export class UsersService {
 
   async updateProfile(userId: string, input: { name?: string; email?: string }) {
     if (input.email) {
-      const existing = await this.prisma.user.findFirst({ where: { email: input.email } });
+      const existing = await this.prisma.user.findUnique({ where: { email: input.email } });
       if (existing && existing.id !== userId) throw new ConflictException('This email is already in use.');
     }
     const user = await this.prisma.user.update({
