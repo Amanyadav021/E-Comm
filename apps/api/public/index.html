@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>ShopCraft API</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin:0; min-height:100vh; display:grid; place-items:center;
+         font:15px/1.6 ui-sans-serif,system-ui,"Segoe UI",sans-serif;
+         background:#fafafa; color:#18181b; }
+  @media (prefers-color-scheme:dark){ body{background:#09090b;color:#fafafa} }
+  .card { max-width:32rem; padding:2rem; }
+  h1 { font-size:1.35rem; margin:0 0 .25rem; letter-spacing:-.01em; }
+  .brand { color:#4f46e5; }
+  p { color:#71717a; margin:.25rem 0 1.25rem; }
+  .status { display:inline-flex; align-items:center; gap:.5rem; font-weight:600;
+            font-size:.8rem; padding:.3rem .7rem; border-radius:99px;
+            background:#dcfce7; color:#15803d; }
+  @media (prefers-color-scheme:dark){ .status{background:#14532d33;color:#4ade80} }
+  .dot { width:.5rem; height:.5rem; border-radius:99px; background:currentColor; }
+  ul { list-style:none; padding:0; margin:1.25rem 0 0; }
+  li { padding:.4rem 0; border-top:1px solid #e4e4e7; }
+  @media (prefers-color-scheme:dark){ li{border-color:#27272a} }
+  code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.85em; }
+  a { color:#4f46e5; text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  small { color:#a1a1aa; display:block; margin-top:1.5rem; font-size:.78rem; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <span class="status"><span class="dot"></span>API running</span>
+    <h1><span class="brand">Shop</span>Craft API</h1>
+    <p>This host serves the API only. The storefront and dashboard are deployed separately.</p>
+    <ul>
+      <li><a href="/api/catalog/categories"><code>/api/catalog/categories</code></a> — category tree</li>
+      <li><a href="/api/catalog/products?pageSize=3"><code>/api/catalog/products</code></a> — product listing</li>
+      <li><a href="/api/content/home"><code>/api/content/home</code></a> — homepage content</li>
+    </ul>
+    <small>Admin and account endpoints require authentication.</small>
+  </div>
+</body>
+</html>
