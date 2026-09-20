@@ -11,7 +11,8 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "test": "jest",
-    "test:e2e": "jest --config jest-e2e.config.js"
+    "test:e2e": "jest --config jest-e2e.config.js",
+    "images:migrate": "tsx scripts/migrate-images-to-storage.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1136.0",
