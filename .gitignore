@@ -30,3 +30,6 @@ Thumbs.db
 
 # Test artifacts
 coverage/
+
+# generated env dump for pasting into Vercel - contains live credentials
+vercel-api-env.txt
