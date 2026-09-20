@@ -20,12 +20,38 @@ function extractToken(req: Request): string | null {
   return typeof cookie === 'string' && cookie.length > 0 ? cookie : null;
 }
 
+/**
+ * DEMO_MODE=true signs every anonymous visitor in as the seeded demo customer,
+ * so a prospect can browse, add to cart and complete checkout without creating
+ * an account. It grants CUSTOMER rights only — the demo user has no staff role,
+ * so PermissionsGuard still locks every admin route behind a real login.
+ *
+ * Never enable this on a store handling real orders: all visitors share one
+ * account, and therefore one cart and one order history.
+ */
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
+  private demoUser: AuthUser | null = null;
+  private demoLookupAt = 0;
+
   constructor(
     private readonly jwt: JwtService,
     private readonly reflector: Reflector,
+    private readonly prisma: PrismaService,
   ) {}
+
+  /** Seeded demo customer, cached for 5 minutes to avoid a query per request. */
+  private async getDemoUser(): Promise<AuthUser | null> {
+    if (this.demoUser && Date.now() - this.demoLookupAt < 300_000) return this.demoUser;
+    const user = await this.prisma.user.findFirst({
+      where: { email: 'demo@shopcraft.local', status: 'ACTIVE', deletedAt: null },
+      include: { roles: { include: { role: true } } },
+    });
+    if (!user) return null;
+    this.demoUser = { id: user.id, name: user.name, roles: user.roles.map((r) => r.role.name) };
+    this.demoLookupAt = Date.now();
+    return this.demoUser;
+  }
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -44,6 +70,11 @@ export class JwtAuthGuard implements CanActivate {
       } catch {
         if (!isPublic) throw new UnauthorizedException('Session expired. Please sign in again.');
       }
+    }
+
+    if (!(req as any).user && process.env.DEMO_MODE === 'true') {
+      const demo = await this.getDemoUser();
+      if (demo) (req as any).user = demo;
     }
 
     if (!isPublic && !(req as any).user) {

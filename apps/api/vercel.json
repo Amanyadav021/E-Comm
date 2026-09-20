@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "cd ../.. && npm install --no-audit --no-fund",
+  "buildCommand": "cd ../.. && npm run build:shared && cd apps/api && npx prisma generate && npx nest build",
+  "functions": {
+    "api/**": {
+      "maxDuration": 30
+    }
+  }
+}

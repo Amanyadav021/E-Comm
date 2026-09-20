@@ -61,6 +61,14 @@ import { STORAGE_PROVIDER, storageProviderFactory } from './uploads/storage.prov
 import { TasksService } from './tasks/tasks.service';
 
 /**
+ * Serverless (Vercel) cannot run @nestjs/schedule: the process is torn down
+ * between requests, so a cron would never fire. It is registered only when the
+ * API runs as a long-lived server. See docs/DEPLOYMENT.md for the consequence —
+ * unpaid orders stop auto-expiring, so their reserved stock is not released.
+ */
+const CRON_ENABLED = process.env.DISABLE_CRON !== 'true';
+
+/**
  * ShopCraft API — a modular monolith. Each domain lives in its own folder
  * (auth, catalog, cart, checkout, payments, orders, inventory, admin/*) with
  * services as the domain boundary; this module wires the dependency graph.
@@ -69,7 +77,7 @@ import { TasksService } from './tasks/tasks.service';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     JwtModule.register({ global: true }),
-    ScheduleModule.forRoot(),
+    ...(CRON_ENABLED ? [ScheduleModule.forRoot()] : []),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 300 }]),
   ],
   controllers: [
@@ -112,7 +120,7 @@ import { TasksService } from './tasks/tasks.service';
     NotificationsService,
     CatalogAdminService,
     OrdersAdminService,
-    TasksService,
+    ...(CRON_ENABLED ? [TasksService] : []),
     { provide: OTP_SENDER, useFactory: otpSenderFactory },
     { provide: EMAIL_SENDER, useFactory: emailSenderFactory },
     { provide: PAYMENT_GATEWAY, useFactory: paymentGatewayFactory },

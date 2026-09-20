@@ -1,5 +1,27 @@
 # Deploying ShopCraft
 
+## Demo deployment: everything on Vercel
+
+For showing the platform to someone (not for taking real orders) the API can
+run as a Vercel serverless function instead of needing its own always-on host.
+Deploy `apps/api` as a **third Vercel project** — `apps/api/vercel.json` and
+`apps/api/api/[[...path]].js` are set up for it.
+
+Two flags change the behaviour:
+
+| Env var | Effect |
+| --- | --- |
+| `DISABLE_CRON=true` | Skips `ScheduleModule`. **Required** on serverless — the process dies between requests so crons could never fire anyway. Consequence: unpaid orders no longer auto-expire, so their reserved stock is never released. |
+| `DEMO_MODE=true` | Signs every anonymous visitor in as the seeded demo customer, so a prospect can browse, add to cart and check out with no signup. Grants CUSTOMER rights only — admin routes still return 403 without a real staff login. |
+
+> **Neither flag belongs on a real store.** `DEMO_MODE` makes every visitor
+> share one account, one cart and one order history. `DISABLE_CRON` silently
+> leaks inventory: stock reserved by an abandoned checkout is never returned.
+
+Known limits of the serverless deployment: cold starts of a second or two on
+the first request, and payment webhooks are untested there (the demo uses the
+mock gateway, which completes through the signed callback instead).
+
 ## What runs where
 
 Vercel is the right home for the two Next.js apps. It is **not** a suitable home
