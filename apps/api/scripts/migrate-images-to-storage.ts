@@ -1,3 +1,4 @@
+import 'dotenv/config';
 /**
  * One-time migration: push every locally-stored image into the configured
  * object storage and rewrite the URLs held in the database.
