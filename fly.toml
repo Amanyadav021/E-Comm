@@ -1,0 +1,43 @@
+# ShopCraft API on Fly.io
+#   deploy from the repo root:  fly deploy
+#
+# The build context is the repo root because apps/api/Dockerfile installs the
+# npm workspace (it needs packages/shared and the root lockfile).
+
+app = "shopcraft-api"
+primary_region = "sin"
+
+[build]
+  dockerfile = "apps/api/Dockerfile"
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+
+  # The API must stay awake: tasks.service.ts runs crons that expire unpaid
+  # orders (releasing reserved stock), mark abandoned carts and purge tokens.
+  # Letting Fly stop the machine would silently stop all three.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 200
+    hard_limit = 250
+
+# Cheap liveness probe — /api/catalog/categories needs no auth and touches the DB,
+# so a passing check means "API up AND database reachable".
+[[http_service.checks]]
+  interval = "30s"
+  timeout = "5s"
+  grace_period = "20s"
+  method = "GET"
+  path = "/api/catalog/categories"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+# Node + Prisma occasionally spikes; a little swap avoids an OOM restart.
+swap_size_mb = 512
