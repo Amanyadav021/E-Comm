@@ -4,8 +4,9 @@
   "installCommand": "cd ../.. && npm install --no-audit --no-fund",
   "buildCommand": "cd ../.. && npm run build:shared && cd apps/api && npx prisma generate && npx nest build",
   "functions": {
-    "api/**": {
-      "maxDuration": 30
+    "api/[...path].js": {
+      "maxDuration": 30,
+      "includeFiles": "dist/**"
     }
   },
   "outputDirectory": "public"

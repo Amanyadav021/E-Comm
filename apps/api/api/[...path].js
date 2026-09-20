@@ -63,9 +63,20 @@ module.exports = async (req, res) => {
     const server = await bootstrap();
     return server(req, res);
   } catch (err) {
+    // Surfaced in the response because a cold-start failure is otherwise
+    // invisible without Vercel log access. Safe for this demo deployment;
+    // drop the detail before handling real customer traffic.
     console.error('API bootstrap failed:', err);
     res.statusCode = 500;
     res.setHeader('content-type', 'application/json');
-    res.end(JSON.stringify({ message: 'API failed to start' }));
+    res.end(
+      JSON.stringify({
+        message: 'API failed to start',
+        error: err && err.message,
+        code: err && err.code,
+        stack: err && err.stack ? String(err.stack).split('
+').slice(0, 6) : undefined,
+      }),
+    );
   }
 };
